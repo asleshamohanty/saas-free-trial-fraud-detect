@@ -1,6 +1,6 @@
 This project is being built incrementally, following a versioned development roadmap.
-![Version](https://img.shields.io/badge/version-v0.1-blue)
-![Status](https://img.shields.io/badge/status-MVP%20complete-success)
+![Version](https://img.shields.io/badge/version-v0.3-blue)
+![Status](https://img.shields.io/badge/status-active%20development-yellow)
 
 # saas free-trial fraud detection system
 
