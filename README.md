@@ -1,3 +1,7 @@
+This project is being built incrementally, following a versioned development roadmap.
+![Version](https://img.shields.io/badge/version-v0.1-blue)
+![Status](https://img.shields.io/badge/status-MVP%20complete-success)
+
 # saas free-trial fraud detection system
 
 while using claude i kept running out of limits and all i did was log in from multiple emails, but that got me thinking — if I had a SaaS platform, i really would not someone doing this. after some research, i realized this is a real problem called free-trial fraud, where a single user masks themselves as multiple users (guilty as charged — someone gift me claude pro)
@@ -20,8 +24,17 @@ This leads to revenue loss and misleading product metrics.
 ## Solution
 
 I'm building a composite identity for each user using multiple signals and assigns a risk score to every signup attempt.
+Unlike traditional systems that rely on a single signal (IP or email), this system builds a probabilistic identity using multiple weak signals combined into a unified risk score.
 
 User → Fingerprint + Behavior + IP → Risk Score → Action
+
+---
+
+## Current Implementation Scope
+
+The current version includes a fully functional rule-based fraud detection system with real-time scoring via a REST API.
+
+Machine learning, advanced IP intelligence, and dashboarding are planned in upcoming versions.
 
 ---
 
@@ -69,23 +82,40 @@ User → Fingerprint + Behavior + IP → Risk Score → Action
 
 ## Tech Stack
 
-Flask, PostgreSQL, Redis, React, scikit-learn/XGBoost, Docker
+Flask, PostgreSQL (Supabase), SQLAlchemy, Python
 
 ---
 
 ## Development Roadmap
 
-| Version | Focus      | Key Additions                                                     | Outcome                      |
-| ------- | ---------- | ----------------------------------------------------------------- | ---------------------------- |
-| v0.1    | MVP        | Basic APIs, PostgreSQL, simple fingerprinting, rule-based scoring | End-to-end working pipeline  |
-| v0.2    | Signals    | IP tracking, VPN detection, email intelligence                    | Improved detection accuracy  |
-| v0.3    | Behavior   | Keystrokes, mouse movement, timing signals                        | Bot and automation detection |
-| v0.4    | Dashboard  | React dashboard, risk visualization, logs                         | System observability         |
-| v0.5    | ML         | Train model, combine with rules                                   | Adaptive fraud detection     |
-| v0.6    | Actions    | CAPTCHA, OTP, blocking logic                                      | Full response system         |
-| v0.7    | Hardening  | Anti-evasion, subnet/ASN tracking                                 | Handles advanced attackers   |
-| v0.8    | Feedback   | Labeling, retraining, drift detection                             | Self-improving system        |
-| v1.0    | Production | Multi-tenant, API keys, monitoring                                | Scalable SaaS-ready product  |
+The project is built in incremental versions, starting from a simple rule-based system and evolving into a scalable, production-ready SaaS fraud detection platform.
+
+| Version | Focus        | Key Additions                                    | Outcome                                  |
+| ------- | ------------ | ------------------------------------------------ | ---------------------------------------- |
+| v0.1    | MVP          | Flask API, rule-based scoring                    | Basic working fraud detection API        |
+| v0.2    | Signals      | Email checks, device tracking, basic behavior    | Multi-signal detection working           |
+| v0.3    | Database     | PostgreSQL (Supabase), event storage             | Persistent history-based detection       |
+| v0.4    | Intelligence | IP analysis, VPN detection, feature improvements | Stronger fraud detection accuracy        |
+| v0.5    | ML           | Train model, combine with rules                  | Adaptive fraud detection system          |
+| v0.6    | Dashboard    | React dashboard, risk visualization              | System observability and demo capability |
+| v0.7    | Actions      | CAPTCHA, OTP, blocking logic                     | Full fraud response system               |
+| v0.8    | Hardening    | Anti-evasion, subnet/ASN tracking                | Handles advanced attackers               |
+| v1.0    | Production   | Multi-tenant, API keys, monitoring               | Scalable SaaS-ready platform             |
+
+---
+
+### Progression Strategy
+
+The system evolves in three major phases:
+
+* **Foundation (v0.1 – v0.3)**
+  Build core fraud detection logic and introduce persistent storage for tracking user behavior over time.
+
+* **Intelligence (v0.4 – v0.5)**
+  Improve detection accuracy using richer signals and machine learning.
+
+* **Productization (v0.6 – v1.0)**
+  Add dashboards, enforcement mechanisms, and scalability features to transform the system into a production-ready SaaS platform.
 
 ---
 
@@ -120,3 +150,18 @@ Flask, PostgreSQL, Redis, React, scikit-learn/XGBoost, Docker
 * Multi-tenant SaaS expansion
 
 ---
+
+## Project Status
+
+- Current Version: v0.1 (MVP Complete)
+- Next Milestone: v0.3 — Database Integration (PostgreSQL / Supabase)
+
+### Completed
+- Flask API with `/score` endpoint
+- Rule-based fraud detection engine
+- Multi-signal feature extraction (email, device, behavior)
+- Risk scoring + decision system (allow / captcha / block)
+
+### In Progress
+- Persistent storage (Supabase PostgreSQL)
+- Replacing in-memory tracking with database queries
