@@ -57,6 +57,7 @@ def build_features(data):
     user = get_or_create_user(db, email)
     fingerprint = get_or_create_fingerprint(db, device_id)
 
+    # store signup event
     event = SignupEvent(
         user_id=user.id,
         fingerprint_id=fingerprint.id,
@@ -66,6 +67,7 @@ def build_features(data):
     db.add(event)
     db.commit()
 
+    # counts
     accounts_per_device = db.query(SignupEvent)\
         .filter_by(fingerprint_id=fingerprint.id)\
         .count()
@@ -74,20 +76,25 @@ def build_features(data):
         .filter_by(ip_address=ip)\
         .count()
 
+    accounts_per_user = db.query(SignupEvent)\
+        .filter_by(user_id=user.id)\
+        .count()
+
     features = {
         "accounts_per_device": accounts_per_device,
         "accounts_per_ip": accounts_per_ip,
+        "accounts_per_user": accounts_per_user,
 
         "time_to_submit": data.get("time_to_submit", 0),
         "keystrokes": data.get("keystrokes", 0),
         "mouse_distance": data.get("mouse_distance", 0),
 
-        "is_disposable_email": is_disposable_email(raw_email),
+        "is_disposable_email": int(is_disposable_email(raw_email)),
         "normalized_email": email,
 
         "fingerprint_hash": device_id,
 
-        "is_suspicious_ip": ip_info["is_suspicious_ip"],
+        "is_suspicious_ip": int(ip_info["is_suspicious_ip"]),
         "country": ip_info["country"],
         "isp": ip_info["isp"],
         "org": ip_info["org"]

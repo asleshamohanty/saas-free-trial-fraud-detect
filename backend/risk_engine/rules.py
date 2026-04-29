@@ -53,6 +53,15 @@ def calculate_risk(features):
         reasons.append("Extreme device reuse")
 
     # -----------------------------------------
+    # User History Signals
+    # -----------------------------------------
+    accounts_per_user = features.get("accounts_per_user", 0)
+
+    if accounts_per_user >= 3:
+        score += 10
+        reasons.append("Repeated signup attempts by user")
+
+    # -----------------------------------------
     # Behavioral Signals
     # -----------------------------------------
     time_to_submit = features.get("time_to_submit", 99999)
@@ -74,11 +83,10 @@ def calculate_risk(features):
     # -----------------------------------------
     # Cap Score
     # -----------------------------------------
-    if score > 100:
-        score = 100
+    score = min(score, 100)
 
     # -----------------------------------------
-    # Decision Engine
+    # Decision
     # -----------------------------------------
     if score >= 60:
         action = "block"
