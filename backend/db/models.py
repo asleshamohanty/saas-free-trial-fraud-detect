@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -29,3 +29,5 @@ class SignupEvent(Base):
     fingerprint_id = Column(UUID(as_uuid=True), ForeignKey("fingerprints.id"))
     ip_address = Column(String)
     created_at = Column(DateTime, server_default=func.now())
+    risk_score = Column(Integer, nullable=True)
+    action = Column(String, nullable=True)

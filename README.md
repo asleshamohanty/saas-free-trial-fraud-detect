@@ -1,10 +1,11 @@
 This project is being built incrementally, following a versioned development roadmap.
-![Version](https://img.shields.io/badge/version-v0.3-blue)
+
+![Version](https://img.shields.io/badge/version-v0.4-blue)
 ![Status](https://img.shields.io/badge/status-active%20development-yellow)
 
 # saas free-trial fraud detection system
 
-while using claude i kept running out of limits and all i did was log in from multiple emails, but that got me thinking — if I had a SaaS platform, i really would not someone doing this. after some research, i realized this is a real problem called free-trial fraud, where a single user masks themselves as multiple users (guilty as charged — someone gift me claude pro)
+while using claude i kept running out of limits and all i did was log in from multiple emails, but that got me thinking — if i had a SaaS platform, i would not want users abusing trials this way. after some research, i realized this is a real problem called free-trial fraud, where a single user masks themselves as multiple users (guilty as charged — someone gift me claude pro).
 
 ---
 
@@ -12,29 +13,40 @@ while using claude i kept running out of limits and all i did was log in from mu
 
 SaaS platforms commonly face free-trial abuse where users:
 
-* Create multiple accounts using different email addresses
-* Use VPNs or proxies to mask IP identity
-* Use incognito mode to bypass tracking
-* Automate account creation using bots
+* create multiple accounts using different email addresses
+* use VPNs or proxies to mask IP identity
+* use incognito mode or fresh browsers
+* automate account creation using bots
 
-This leads to revenue loss and misleading product metrics.
+This leads to revenue loss, infrastructure abuse, and misleading product metrics.
 
 ---
 
 ## Solution
 
-I'm building a composite identity for each user using multiple signals and assigns a risk score to every signup attempt.
-Unlike traditional systems that rely on a single signal (IP or email), this system builds a probabilistic identity using multiple weak signals combined into a unified risk score.
+i'm building a composite identity for each user using multiple signals and assigning a risk score to every signup attempt.
 
-User → Fingerprint + Behavior + IP → Risk Score → Action
+Unlike traditional systems that rely on one signal (IP or email), this system builds a probabilistic identity using multiple weak signals combined into one unified fraud score.
+
+```text id="e0ek0u"
+User → Fingerprint + Behavior + IP + Email → Risk Score → Action
+```
 
 ---
 
 ## Current Implementation Scope
 
-The current version includes a fully functional rule-based fraud detection system with real-time scoring via a REST API.
+The current version includes a working backend fraud detection engine with:
 
-Machine learning, advanced IP intelligence, and dashboarding are planned in upcoming versions.
+* REST API scoring endpoint
+* persistent PostgreSQL storage
+* historical identity tracking
+* email intelligence
+* browser fingerprinting
+* IP intelligence
+* calibrated allow / captcha / block actions
+
+Machine learning, dashboards, and advanced anti-evasion systems are planned in upcoming versions.
 
 ---
 
@@ -42,41 +54,42 @@ Machine learning, advanced IP intelligence, and dashboarding are planned in upco
 
 ### Device Fingerprinting
 
-* User agent, OS, screen resolution, timezone
-* Optional canvas and WebGL hashing
-* Stable pseudonymous device identification
+* user agent
+* screen resolution
+* timezone
+* language
+* hashed pseudonymous device identity
 
 ### Network Intelligence
 
-* IP tracking and subnet analysis
-* VPN/proxy detection
-* ASN classification (residential vs datacenter)
+* IP reuse analysis
+* suspicious proxy / hosting detection
+* cloud provider detection
+* provider metadata (ISP / org / country)
 
 ### Email Intelligence
 
-* Disposable email detection
-* Email similarity detection
-* Domain validation and normalization
+* disposable email detection
+* gmail alias normalization
+* canonical identity mapping
 
 ### Behavioral Analysis
 
-* Time taken to complete signup
-* Keystroke count
-* Mouse movement tracking
-* Paste event detection
+* time taken to complete signup
+* keystroke count
+* mouse movement distance
 
 ### Risk Scoring Engine
 
-* Rule-based scoring system
-* Optional ML model (XGBoost / Logistic Regression)
-* Combined final risk score (0–100)
+* weighted rule-based scoring
+* multi-signal fraud confidence model
+* optional ML layer planned in v0.5
 
 ### Decision Engine
 
-* Allow low-risk users
-* Trigger CAPTCHA for medium risk
-* Require verification (OTP) for high risk
-* Block or flag critical cases
+* allow low-risk users
+* trigger CAPTCHA for medium risk
+* block high-risk signups
 
 ---
 
@@ -88,80 +101,91 @@ Flask, PostgreSQL (Supabase), SQLAlchemy, Python
 
 ## Development Roadmap
 
-The project is built in incremental versions, starting from a simple rule-based system and evolving into a scalable, production-ready SaaS fraud detection platform.
+The project is built in incremental versions, starting from a simple rule-based system and evolving into a scalable fraud prevention platform.
 
-| Version | Focus        | Key Additions                                    | Outcome                                  |
-| ------- | ------------ | ------------------------------------------------ | ---------------------------------------- |
-| v0.1    | MVP          | Flask API, rule-based scoring                    | Basic working fraud detection API        |
-| v0.2    | Signals      | Email checks, device tracking, basic behavior    | Multi-signal detection working           |
-| v0.3    | Database     | PostgreSQL (Supabase), event storage             | Persistent history-based detection       |
-| v0.4    | Intelligence | IP analysis, VPN detection, feature improvements | Stronger fraud detection accuracy        |
-| v0.5    | ML           | Train model, combine with rules                  | Adaptive fraud detection system          |
-| v0.6    | Dashboard    | React dashboard, risk visualization              | System observability and demo capability |
-| v0.7    | Actions      | CAPTCHA, OTP, blocking logic                     | Full fraud response system               |
-| v0.8    | Hardening    | Anti-evasion, subnet/ASN tracking                | Handles advanced attackers               |
-| v1.0    | Production   | Multi-tenant, API keys, monitoring               | Scalable SaaS-ready platform             |
+| Version | Focus        | Key Additions                                    | Outcome                            |
+| ------- | ------------ | ------------------------------------------------ | ---------------------------------- |
+| v0.1    | MVP          | Flask API, rule-based scoring                    | Basic working fraud detection API  |
+| v0.2    | Signals      | Email checks, device tracking, behavior signals  | Multi-signal detection             |
+| v0.3    | Database     | PostgreSQL (Supabase), event storage             | Persistent history-based detection |
+| v0.4    | Intelligence | IP analysis, fingerprinting, email normalization | Stronger fraud detection accuracy  |
+| v0.5    | ML           | Train model, combine with rules                  | Adaptive fraud detection           |
+| v0.6    | Dashboard    | React dashboard, risk visualization              | System observability               |
+| v0.7    | Actions      | CAPTCHA, OTP, blocking logic                     | Full fraud response system         |
+| v0.8    | Hardening    | Anti-evasion, subnet / ASN tracking              | Handles advanced attackers         |
+| v1.0    | Production   | Multi-tenant, API keys, monitoring               | SaaS-ready platform                |
 
 ---
 
-### Progression Strategy
+## Progression Strategy
 
 The system evolves in three major phases:
 
-* **Foundation (v0.1 – v0.3)**
-  Build core fraud detection logic and introduce persistent storage for tracking user behavior over time.
+### Foundation (v0.1 – v0.3)
 
-* **Intelligence (v0.4 – v0.5)**
-  Improve detection accuracy using richer signals and machine learning.
+Build core fraud detection logic and persistent storage for user history.
 
-* **Productization (v0.6 – v1.0)**
-  Add dashboards, enforcement mechanisms, and scalability features to transform the system into a production-ready SaaS platform.
+### Intelligence (v0.4 – v0.5)
+
+Improve detection accuracy using richer signals and machine learning.
+
+### Productization (v0.6 – v1.0)
+
+Add dashboards, enforcement mechanisms, and scalability features.
 
 ---
 
 ## How It Works
 
-1. User visits signup page
-2. Frontend collects device, network, and behavioral data
-3. Data is sent to backend ingestion API
-4. Features are computed
-5. Risk score is generated
-6. Decision engine determines action
-7. Outcome is logged for future learning
+1. user visits signup page
+2. frontend collects device, network, and behavioral data
+3. data is sent to backend scoring API
+4. features are computed
+5. risk score is generated
+6. decision engine determines action
+7. outcome is logged for future learning
 
 ---
 
 ## Demo Scenario
 
-* User signs up with multiple email variations
-* System detects same device fingerprint
-* Email similarity is identified
-* Risk score increases
+* user signs up with multiple email variations
+* system detects same fingerprint
+* IP history is reused
+* risk score increases
 * CAPTCHA or blocking is triggered
 
 ---
 
 ## Future Improvements
 
-* Advanced fingerprinting techniques
-* Graph-based fraud detection
-* Real-time streaming pipeline
-* Explainability dashboards
-* Multi-tenant SaaS expansion
+* machine learning fraud scoring
+* graph-based fraud rings detection
+* streaming real-time detection
+* explainability dashboard
+* multi-tenant SaaS deployment
 
 ---
 
 ## Project Status
 
-- Current Version: v0.1 (MVP Complete)
-- Next Milestone: v0.3 — Database Integration (PostgreSQL / Supabase)
+* Current Version: v0.4 (Intelligence Layer Complete)
+* Next Milestone: v0.5 — Machine Learning Risk Scoring
 
 ### Completed
-- Flask API with `/score` endpoint
-- Rule-based fraud detection engine
-- Multi-signal feature extraction (email, device, behavior)
-- Risk scoring + decision system (allow / captcha / block)
+
+* Flask API with `/score`
+* rule-based fraud engine
+* PostgreSQL persistent storage
+* historical IP / device tracking
+* browser fingerprinting
+* email normalization
+* disposable email checks
+* suspicious IP intelligence
+* calibrated fraud actions
 
 ### In Progress
-- Persistent storage (Supabase PostgreSQL)
-- Replacing in-memory tracking with database queries
+
+* dataset generation for ML
+* feature logging for training
+* fraud probability model (v0.5)

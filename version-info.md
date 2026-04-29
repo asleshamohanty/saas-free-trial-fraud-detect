@@ -1,6 +1,6 @@
 # Current Progress
 
-This document summarizes the evolution of the system across versions (v0.1 → v0.3), what has been built, and how to test each stage.
+This document summarizes the evolution of the system across versions (v0.1 → v0.4), what has been built, and how to test each stage.
 
 ---
 
@@ -17,7 +17,7 @@ This document summarizes the evolution of the system across versions (v0.1 → v
 
 ## Key Files
 
-```
+```text
 backend/
 ├── app.py
 ├── routes/score.py
@@ -38,8 +38,6 @@ backend/
 
 ## How to Test (v0.1)
 
-### Request
-
 ```json
 {
   "email": "test@tempmail.com",
@@ -51,7 +49,7 @@ backend/
 }
 ```
 
-### Expected
+Expected:
 
 * High risk score
 * Action: block
@@ -81,33 +79,24 @@ backend/
 
 ## Key Update
 
-`feature_builder.py` now tracks:
+`feature_builder.py` tracked:
 
 ```python
 accounts_per_device
 accounts_per_ip
 ```
 
-(using in-memory dictionaries)
+(using Python dictionaries / memory)
 
 ---
 
-## How It Works
+## How to Test
 
-* System combines:
+Send same request multiple times.
 
-  * email + device + behavior
-* Risk increases if same device is reused
+Expected:
 
----
-
-## How to Test (v0.2)
-
-Send same request multiple times:
-
-### Expected
-
-```
+```text
 1st request → low risk
 2nd request → higher risk
 3rd request → even higher risk
@@ -119,7 +108,7 @@ Send same request multiple times:
 
 * Data resets when server restarts
 * Not scalable
-* No real persistence
+* No persistence
 
 ---
 
@@ -128,103 +117,68 @@ Send same request multiple times:
 ## What Was Added
 
 * PostgreSQL (Supabase)
+* SQLAlchemy ORM
 * Persistent event storage
-* Real identity tracking
-* Query-based fraud detection
+* Historical fraud detection
+* Real identity linking
 
 ---
 
-## Database Design
-
-### Tables
+## Database Tables
 
 * `users` → email identity
 * `fingerprints` → device identity
-* `signup_events` → behavioral history
+* `signup_events` → signup history
 
 ---
 
 ## Key Files
 
-```
+```text
 backend/
 ├── db/
-│   ├── db.py              # DB connection
-│   ├── models.py          # table definitions
-│   ├── optimize.sql       # indexes + constraints
-│   ├── init_db.py         # create tables
-│   ├── run_sql.py         # apply optimizations
+│   ├── db.py
+│   ├── models.py
+│   ├── init_db.py
+│   ├── optimize.sql
+│   ├── run_sql.py
 ```
 
 ---
 
-## What Changed in Logic
+## What Changed
 
-### Before (v0.2)
+Before:
 
 ```python
 DEVICE_COUNT = {}
 ```
 
-### After (v0.3)
+After:
 
 ```python
 db.query(SignupEvent).filter_by(...).count()
 ```
 
-Counts now come from database (persistent)
+Now counts persist permanently.
 
 ---
 
 ## Optimizations Applied
 
-To ensure performance at scale:
-
 * Index on `signup_events.ip_address`
 * Index on `signup_events.fingerprint_id`
 * Index on `signup_events.user_id`
-* Unique constraint on `fingerprints.hash`
+* Unique fingerprint hash
 * Index on `users.email`
 
-This avoids full table scans and enables fast fraud queries
-
 ---
 
-## How It Works
+## How to Test
 
-1. User sends request
-2. System:
+Send same payload repeatedly.
 
-   * gets/creates user
-   * gets/creates fingerprint
-   * stores signup event
-3. Queries DB:
-
-   * accounts per device
-   * accounts per IP
-4. Risk engine evaluates
-5. Action returned
-
----
-
-## How to Test (v0.3)
-
-### Step 1 — Send same request multiple times
-
-```json
-{
-  "email": "test@gmail.com",
-  "ip": "1.2.3.4",
-  "device_id": "device123",
-  "time_to_submit": 1000,
-  "keystrokes": 2,
-  "mouse_distance": 0
-}
-```
-
----
-
-### Step 2 — Observe behavior
+Expected:
 
 | Request | accounts_per_device |
 | ------- | ------------------- |
@@ -232,69 +186,201 @@ This avoids full table scans and enables fast fraud queries
 | 2nd     | 2                   |
 | 3rd     | 3                   |
 
-Risk score should increase accordingly
+Risk score rises.
 
 ---
 
-### Step 3 — Verify in database
+## What This Enabled
 
-Check `signup_events` table:
-
-* Multiple rows added
-* Same `fingerprint_id`
-* Same `ip_address`
+* Persistent fraud memory
+* Cross-session detection
+* Device reuse detection
+* Real-world backend architecture
 
 ---
 
-### Step 4 — Cross-email test (important)
+# v0.4 — Intelligence Layer
 
-Change only email:
+## What Was Added
+
+* Email normalization
+* Disposable email detection
+* Browser/device fingerprint hashing
+* IP intelligence
+* Suspicious IP infrastructure detection
+* Cloud-hosted IP detection
+* Calibrated weighted scoring
+* Better allow / captcha / block logic
+
+---
+
+## Email Intelligence
+
+Detects alias abuse like:
+
+```text
+trial@gmail.com
+trial+1@gmail.com
+t.r.i.a.l@gmail.com
+```
+
+Normalized into one identity signal.
+
+---
+
+## Fingerprinting Upgrade
+
+Instead of trusting manual `device_id`, system now hashes:
+
+* user_agent
+* screen_resolution
+* timezone
+* language
+
+This creates a more stable device identity.
+
+---
+
+## IP Intelligence
+
+Uses external IP metadata to detect:
+
+* proxy / VPN style traffic
+* hosting / datacenter traffic
+* suspicious providers
+
+Signals stored as:
+
+```python
+is_suspicious_ip
+country
+isp
+org
+```
+
+---
+
+## Risk Engine Upgrade
+
+Now scores from multiple categories:
+
+* Email risk
+* Device reuse
+* IP reuse
+* Suspicious infrastructure
+* Behavioral bot signals
+
+---
+
+## Key Files
+
+```text
+backend/
+├── services/
+│   ├── email_service.py
+│   ├── ip_service.py
+│   ├── feature_builder.py
+│
+├── risk_engine/
+│   └── rules.py
+```
+
+---
+
+## How to Test (v0.4)
+
+## Test 1 — Clean User
 
 ```json
 {
-  "email": "test2@gmail.com",
-  "ip": "1.2.3.4",
-  "device_id": "device123"
+  "email": "fresh@gmail.com",
+  "ip": "normal_ip",
+  "user_agent": "Chrome",
+  "screen_resolution": "1440x900",
+  "timezone": "Asia/Kolkata",
+  "language": "en-US",
+  "time_to_submit": 4000,
+  "keystrokes": 15,
+  "mouse_distance": 350
 }
 ```
 
 Expected:
 
-* Device reuse still detected
-* Fraud still flagged
+```text
+allow
+```
 
 ---
 
-## What This Enables
+## Test 2 — Alias Abuse
 
-* Persistent fraud detection
-* Cross-session tracking
-* Device-level identity linking
-* Real-world applicability
+```json
+{
+  "email": "trial+1@gmail.com"
+}
+```
+
+Then:
+
+```json
+{
+  "email": "t.r.i.a.l@gmail.com"
+}
+```
+
+Expected:
+
+```text
+captcha / rising risk
+```
 
 ---
 
-## Limitations (Current)
+## Test 3 — Reused Device
 
-* No real VPN detection
-* Simple fingerprinting
-* No email similarity detection
-* No ML model
+Same browser fingerprint + many emails.
+
+Expected:
+
+```text
+captcha → block later
+```
+
+---
+
+## Test 4 — Suspicious IP + Fast Signup
+
+Expected:
+
+```text
+block
+```
+
+---
+
+## What This Enabled
+
+* Detect disguised repeat users
+* Detect hosted/VPN infrastructure
+* Stronger confidence scoring
+* Reduced false positives via weighted signals
 
 ---
 
 # Summary
 
-| Version | Capability                                  |
-| ------- | ------------------------------------------- |
-| v0.1    | Basic rule-based detection                  |
-| v0.2    | Multi-signal detection (in-memory)          |
-| v0.3    | Persistent, database-backed fraud detection |
+| Version | Capability                                 |
+| ------- | ------------------------------------------ |
+| v0.1    | Basic rule-based detection                 |
+| v0.2    | Multi-signal detection (memory only)       |
+| v0.3    | Persistent database-backed fraud detection |
+| v0.4    | Intelligence-driven multi-signal detection |
 
 ---
 
-## Current Status
+# Current Status
 
-Backend System: Production-style MVP
-Version: v0.3
-Ready for: Intelligence Layer (v0.4)
+Backend System: Production-style intelligent fraud detection engine
+Version: v0.4
+Next Milestone: v0.5 — Machine Learning Risk Scoring
